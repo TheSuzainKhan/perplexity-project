@@ -4,6 +4,7 @@ import authRouter from "./routes/auth.routes.js";
 import chatRouter from "./routes/chat.routes.js";
 import morgan from "morgan";
 import cors from "cors";
+import path from "path";
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.use(cors({
     credentials: true,
     methods: [ "GET", "POST", "PUT", "DELETE" ],
 }))
+app.use(express.static("./public"))
 
 // Health check
 app.get("/", (req, res) => {
@@ -25,5 +27,9 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRouter);
 app.use("/api/chats", chatRouter);
+
+app.use('*name', (req, res) => {
+    res.sendFile(path.join(__dirname, "..", "/public/index.html"))
+})
 
 export default app;
