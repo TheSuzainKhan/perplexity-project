@@ -36,20 +36,28 @@ export async function register(req, res) {
 
         const verificationUrl = `${backendUrl}/api/auth/verify-email?token=${emailVerificationToken}`;
 
-        sendEmail({
-            to: email,
-            subject: "Welcome to Perplexity!",
-            html: `
-                <p>Hi ${username},</p>
-                <p>Thank you for registering at <strong>Perplexity</strong>. We're excited to have you on board!</p>
-                <p>Please verify your email address by clicking the link below:</p>
-                <a href="${verificationUrl}">Verify Email</a>
-                <p>If you did not create an account, please ignore this email.</p>
-                <p>Best regards,<br>The Perplexity Team</p>
-            `,
-        }).catch((mailError) => {
+        try {
+            await sendEmail({
+                to: email,
+                subject: "Welcome to Perplexity!",
+                html: `
+                    <p>Hi ${username},</p>
+                    <p>Thank you for registering at <strong>Perplexity</strong>. We're excited to have you on board!</p>
+                    <p>Please verify your email address by clicking the link below:</p>
+                    <a href="${verificationUrl}">Verify Email</a>
+                    <p>If you did not create an account, please ignore this email.</p>
+                    <p>Best regards,<br>The Perplexity Team</p>
+                `,
+            });
+        } catch (mailError) {
             console.error("Failed to send verification email:", mailError);
-        });
+            await userModel.findByIdAndDelete(user._id);
+
+            return res.status(500).json({
+                success: false,
+                message: "Account could not be created because the verification email failed to send. Please check your email configuration and try again.",
+            });
+        }
 
         return res.status(201).json({
             success: true,
