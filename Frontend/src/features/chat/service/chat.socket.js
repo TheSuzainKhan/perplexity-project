@@ -1,9 +1,10 @@
 import { io } from "socket.io-client";
 
+const socketUrl = import.meta.env.VITE_API_URL || window.location.origin;
 
 export const initializeSocketConnection = () => {
 
-    const socket = io("https://perplexity-project-awlr.onrender.com", {
+    const socket = io(socketUrl, {
         withCredentials: true,
     })
 

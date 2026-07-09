@@ -13,6 +13,7 @@ const publicDir = path.resolve(__dirname, "../public");
 const indexFile = path.join(publicDir, "index.html");
 
 const app = express();
+const allowedOrigin = process.env.FRONTEND_URL || "http://localhost:5173";
 
 // Middleware
 app.use(express.json());
@@ -20,7 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(morgan("dev"));
 app.use(cors({
-    origin: "http://localhost:5173",
+    origin: allowedOrigin,
     credentials: true,
     methods: [ "GET", "POST", "PUT", "DELETE" ],
 }))
