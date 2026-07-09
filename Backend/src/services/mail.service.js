@@ -38,6 +38,11 @@ function getTransporter() {
     return transporter;
 }
 
+export async function verifyMailTransporter() {
+    const mailTransporter = getTransporter();
+    await mailTransporter.verify();
+    console.log("Email transporter is ready");
+}
 
 export async function sendEmail({ to, subject, html, text }) {
     const mailTransporter = getTransporter();
