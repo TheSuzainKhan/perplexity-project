@@ -1,4 +1,5 @@
 import "dotenv/config";
+import dns from "dns";
 import app from "./src/app.js";
 import http from "http";
 import connectDB from "./src/config/database.js";
@@ -7,6 +8,7 @@ import { verifyMailTransporter } from "./src/services/mail.service.js";
 
 const PORT = process.env.PORT || 8000;
 
+dns.setDefaultResultOrder("ipv4first");
 
 const httpServer = http.createServer(app);
 
