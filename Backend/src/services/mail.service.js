@@ -1,6 +1,7 @@
+import dns from "dns";
 import nodemailer from "nodemailer";
 
-let transporter;
+let transporterPromise;
 
 function getMissingMailEnvVars() {
     const requiredEnvVars = [
@@ -13,9 +14,9 @@ function getMissingMailEnvVars() {
     return requiredEnvVars.filter((envVar) => !process.env[envVar]);
 }
 
-function getTransporter() {
-    if (transporter) {
-        return transporter;
+async function getTransporter() {
+    if (transporterPromise) {
+        return transporterPromise;
     }
 
     const missingEnvVars = getMissingMailEnvVars();
@@ -24,35 +25,48 @@ function getTransporter() {
         throw new Error(`Missing mail configuration: ${missingEnvVars.join(", ")}`);
     }
 
-    transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        port: 587,
-        secure: false,
-        requireTLS: true,
-        connectionTimeout: 15000,
-        greetingTimeout: 15000,
-        socketTimeout: 20000,
-        family: 4,
-        auth: {
-            type: "OAuth2",
-            user: process.env.GOOGLE_USER,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
-            clientId: process.env.GOOGLE_CLIENT_ID,
-        },
-    });
+    transporterPromise = dns.promises.resolve4("smtp.gmail.com")
+        .then((addresses) => {
+            if (!addresses.length) {
+                throw new Error("No IPv4 address found for smtp.gmail.com");
+            }
 
-    return transporter;
+            return nodemailer.createTransport({
+                host: addresses[0],
+                port: 587,
+                secure: false,
+                requireTLS: true,
+                connectionTimeout: 15000,
+                greetingTimeout: 15000,
+                socketTimeout: 20000,
+                auth: {
+                    type: "OAuth2",
+                    user: process.env.GOOGLE_USER,
+                    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+                    refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
+                    clientId: process.env.GOOGLE_CLIENT_ID,
+                },
+                tls: {
+                    servername: "smtp.gmail.com",
+                },
+            });
+        })
+        .catch((error) => {
+            transporterPromise = null;
+            throw error;
+        });
+
+    return transporterPromise;
 }
 
 export async function verifyMailTransporter() {
-    const mailTransporter = getTransporter();
+    const mailTransporter = await getTransporter();
     await mailTransporter.verify();
     console.log("Email transporter is ready");
 }
 
 export async function sendEmail({ to, subject, html, text }) {
-    const mailTransporter = getTransporter();
+    const mailTransporter = await getTransporter();
 
     const mailOptions = {
         from: process.env.GOOGLE_USER,
