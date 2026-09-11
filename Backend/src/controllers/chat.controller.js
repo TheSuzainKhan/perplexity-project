@@ -46,6 +46,14 @@ export async function sendMessage(req, res) {
             },
         });
     } catch (error) {
+        // Keep the full provider/database error in Render logs. Do not send it
+        // to the browser because it can contain implementation details.
+        console.error("Failed to send chat message:", {
+            name: error?.name,
+            message: error?.message,
+            status: error?.status ?? error?.response?.status,
+            details: error?.response?.data ?? error?.body ?? error?.cause?.message,
+        });
         return res.status(500).json({
             success: false,
             message: "Internal server error",
