@@ -8,7 +8,7 @@ import { searchInternet } from "./internet.service.js";
 // Gemini has a free usage tier. Set GEMINI_API_KEY in Render's Environment
 // settings; this intentionally does not use the rate-limited Mistral key.
 const aiModel = new ChatGoogleGenerativeAI({
-    model: process.env.GEMINI_MODEL || "gemini-flash-latest",
+    model: process.env.GEMINI_MODEL || "gemini-2.5-flash-lite",
     apiKey: process.env.GEMINI_API_KEY,
 });
 
